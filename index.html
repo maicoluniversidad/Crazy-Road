@@ -40,7 +40,7 @@ let score = 0;
 let gameOver = false;
 let roadOffset = 0;
 
-// --- Sprites en Base64 (pixel retro) ---
+// --- Sprites ---
 const imgPlayer = new Image();
 imgPlayer.src =
 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAwCAYAAAAG7+R8AAAAvklEQVR4nO3ZwQmDQBRA0aMf6dV09v1d7wWwRGYckdcz98hs2Yd9gNnmrjshAAAAAAAAAADAf4HPFQCNHJP8Cz2eEX/MOAKZ7te2z9vfZK5Z2Y5Ym2X4M4zxOnltpyQYyFoFPjPbIb2cS1vAcpVJgvcin9nMnZbWdaCJ9wUPlzVVkwm+xHPqF4U1Xcd2GH6SsyfINt3hxahMDrT5/11jpjExExsP+AfsKNoDXT1j0V4w0kAwAAAAAElFTkSuQmCC";
@@ -52,6 +52,14 @@ imgEnemy.src =
 const imgFuel = new Image();
 imgFuel.src =
 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAgCAYAAAAcQ5s8AAAAqUlEQVR4nO2TwQmAMAxD5a+Hg7mCB5RWRQZx0+3+1s4bSPlIP0IiDgAAAAAAAAAAAP4zQHQ8GksRz3IbLXmuDJqGHyGe68PaB7lj5ivhKjQOaDnpX7CF0dB6tjx7f9w8VgN9qPEaXAKrG6Rt9ahO4jtzKQ8aVu9CF6MHF5POs8AMWxYB/odsmSeQtNn2no4Bb/qj2TMezruQAAAAASUVORK5CYII=";
+
+// --- Sonidos (Base64, formato WAV simple) ---
+const sndMove = new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAADYAAAD///8AAP///wD///8A////AP///wD///8A////AP///w==");
+const sndCrash = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA=");
+const sndFuel = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAA///////////8AAAAAAAD///8AAAAAAAD///8=");
+const sndMusic = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAAgICAgP///wAAAP8AAAAAAP///w==");
+sndMusic.loop = true;
+sndMusic.volume = 0.2;
 
 // --- Fondo carretera ---
 function drawRoad() {
@@ -93,6 +101,7 @@ function drawEnemies() {
     // Colisión
     if (enemy.x < playerX + 40 && enemy.x + 40 > playerX &&
         enemy.y < playerY + 60 && enemy.y + 60 > playerY) {
+      sndCrash.play();
       flashScreen();
       gameOver = true;
     }
@@ -110,6 +119,7 @@ function drawFuel() {
     if (fuel.x < playerX + 40 && fuel.x + 30 > playerX &&
         fuel.y < playerY + 60 && fuel.y + 40 > playerY) {
       score += 10;
+      sndFuel.play();
       fuels.splice(i, 1);
     }
   });
@@ -118,8 +128,8 @@ function drawFuel() {
 // --- Control jugador ---
 document.addEventListener("keydown", e => {
   if (gameOver) return;
-  if (e.key === "ArrowLeft" && playerX > 40) playerX -= 20;
-  if (e.key === "ArrowRight" && playerX < 240) playerX += 20;
+  if (e.key === "ArrowLeft" && playerX > 40) { playerX -= 20; sndMove.play(); }
+  if (e.key === "ArrowRight" && playerX < 240) { playerX += 20; sndMove.play(); }
 });
 
 // --- Efecto de choque ---
@@ -143,6 +153,7 @@ function loop() {
     ctx.fillStyle = "red";
     ctx.font = "24px monospace";
     ctx.fillText("💥 GAME OVER 💥", 70, 250);
+    sndMusic.pause();
     return;
   }
 
@@ -156,6 +167,11 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
+// Iniciar música al primer clic
+document.body.addEventListener("click", () => {
+  if (!gameOver) sndMusic.play();
+});
 
 loop();
 </script>
