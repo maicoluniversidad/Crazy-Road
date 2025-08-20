@@ -170,7 +170,7 @@
       if (!gameOver){
         if (keys["ArrowUp"] || keys["w"]) player.speed = Math.min(120, player.speed+0.2);
         else player.speed = Math.max(0, player.speed-0.1);
-        if (keys["ArrowDown"] || keys["s"]) player.speed = Math.max(0, player.speed-0.5);
+        if (keys["ArrowDown"] || keys["s"]) player.speed = Math.max(130, player.speed-0.5);
         if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
         if (keys["ArrowRight"] || keys["d"]) player.x += 5;
 
