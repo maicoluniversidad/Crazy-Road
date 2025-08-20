@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Road Fighter Original 🚗🔥</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #333;
+      font-family: Arial, sans-serif;
+    }
+
+    #game {
+      width: 400px;
+      height: 600px;
+      background: #555;
+      margin: 20px auto;
+      border: 5px solid #111;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .road-line {
+      width: 10px;
+      height: 80px;
+      background: white;
+      position: absolute;
+      left: 195px;
+      animation: moveLine 1s linear infinite;
+    }
+
+    @keyframes moveLine {
+      from { top: -80px; }
+      to { top: 600px; }
+    }
+
+    #player {
+      width: 40px;
+      height: 80px;
+      background: red;
+      position: absolute;
+      bottom: 20px;
+      left: 180px;
+      border-radius: 5px;
+    }
+
+    .enemy {
+      width: 40px;
+      height: 80px;
+      background: blue;
+      position: absolute;
+      top: -100px;
+      border-radius: 5px;
+    }
+
+    .fuel {
+      width: 30px;
+      height: 30px;
+      background: yellow;
+      position: absolute;
+      top: -50px;
+      border-radius: 50%;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 18px;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: white;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="score">Puntos: 0</div>
+    <div id="player"></div>
+    <div id="gameOver">💥 Game Over<br>¡pero tu coche sigue cool 😎!</div>
+  </div>
+
+  <script>
+    const game = document.getElementById("game");
+    const player = document.getElementById("player");
+    const scoreDisplay = document.getElementById("score");
+    const gameOverText = document.getElementById("gameOver");
+    let score = 0;
+    let gameOver = false;
+    let speed = 4;
+
+    // Líneas de carretera
+    for (let i = 0; i < 6; i++) {
+      let line = document.createElement("div");
+      line.classList.add("road-line");
+      line.style.top = (i * 100) + "px";
+      game.appendChild(line);
+    }
+
+    // Movimiento del jugador
+    document.addEventListener("keydown", (e) => {
+      if (gameOver) return;
+      let left = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
+      if (e.key === "ArrowLeft" && left > 0) {
+        player.style.left = left - 40 + "px";
+      }
+      if (e.key === "ArrowRight" && left < 360) {
+        player.style.left = left + 40 + "px";
+      }
+    });
+
+    // Crear enemigos
+    function createEnemy() {
+      let enemy = document.createElement("div");
+      enemy.classList.add("enemy");
+      enemy.style.left = Math.floor(Math.random() * 10) * 40 + "px";
+      enemy.style.background = getRandomColor();
+      game.appendChild(enemy);
+
+      let move = setInterval(() => {
+        if (gameOver) {
+          enemy.remove();
+          clearInterval(move);
+          return;
+        }
+        let top = parseInt(window.getComputedStyle(enemy).getPropertyValue("top"));
+        if (top > 600) {
+          enemy.remove();
+          clearInterval(move);
+          score++;
+          scoreDisplay.innerText = "Puntos: " + score;
+        } else {
+          enemy.style.top = top + speed + "px";
+        }
+
+        // Colisión
+        let pLeft = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
+        let pTop = parseInt(window.getComputedStyle(player).getPropertyValue("top"));
+        let eLeft = parseInt(window.getComputedStyle(enemy).getPropertyValue("left"));
+        let eTop = parseInt(window.getComputedStyle(enemy).getPropertyValue("top"));
+        if (Math.abs(pLeft - eLeft) < 40 && eTop + 80 > pTop && eTop < pTop + 80) {
+          endGame();
+          clearInterval(move);
+        }
+      }, 30);
+    }
+
+    // Crear gasolina (bonus)
+    function createFuel() {
+      let fuel = document.createElement("div");
+      fuel.classList.add("fuel");
+      fuel.style.left = Math.floor(Math.random() * 10) * 40 + "px";
+      game.appendChild(fuel);
+
+      let move = setInterval(() => {
+        if (gameOver) {
+          fuel.remove();
+          clearInterval(move);
+          return;
+        }
+        let top = parseInt(window.getComputedStyle(fuel).getPropertyValue("top"));
+        if (top > 600) {
+          fuel.remove();
+          clearInterval(move);
+        } else {
+          fuel.style.top = top + speed + "px";
+        }
+
+        // Colisión con bonus
+        let pLeft = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
+        let pTop = parseInt(window.getComputedStyle(player).getPropertyValue("top"));
+        let fLeft = parseInt(window.getComputedStyle(fuel).getPropertyValue("left"));
+        let fTop = parseInt(window.getComputedStyle(fuel).getPropertyValue("top"));
+        if (Math.abs(pLeft - fLeft) < 40 && fTop + 30 > pTop && fTop < pTop + 80) {
+          score += 5;
+          scoreDisplay.innerText = "Puntos: " + score;
+          fuel.remove();
+          clearInterval(move);
+        }
+      }, 30);
+    }
+
+    // Colores aleatorios para enemigos
+    function getRandomColor() {
+      let colors = ["blue", "green", "purple", "orange", "pink"];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Fin del juego
+    function endGame() {
+      gameOver = true;
+      gameOverText.style.display = "block";
+    }
+
+    // Spawnear enemigos y gasolina
+    setInterval(() => {
+      if (!gameOver) createEnemy();
+    }, 1500);
+
+    setInterval(() => {
+      if (!gameOver) createFuel();
+    }, 4000);
+  </script>
+</body>
+</html>
