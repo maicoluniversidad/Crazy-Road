@@ -235,7 +235,7 @@
         ctx.font="24px Arial";
         ctx.fillText("GAME OVER",W()/2-70,H()/2);
         ctx.font="16px Arial";
-        ctx.fillText("Presiona R para reiniciar",W()/2-80,H()/2+20);
+        ctx.fillText("Refresca la pagina para reiniciar",W()/2-80,H()/2+20);
       }
       requestAnimationFrame(loop);
     }
@@ -267,10 +267,10 @@
       loop();
     });
     document.getElementById("howBtn").addEventListener("click",()=>{
-      alert("Controles:\n- PC: Flechas o WASD\n- Móvil: botones en pantalla\nEvita chocar con otros autos y llega lo más lejos posible.");
+      alert("Controles: Móvil: botones en pantalla\nEvita chocar con otros autos y llega lo más lejos posible.");
     });
     document.getElementById("creditsBtn").addEventListener("click",()=>{
-      alert("Juego creado por: Tú 🚀\nCon HTML, CSS y JavaScript.");
+      alert("Juego creado por: Maicol Lancheros, Samuel Saavedra y Kevin Gonzalez \nCon HTML, CSS y JavaScript.");
     });
   </script>
 </body>
