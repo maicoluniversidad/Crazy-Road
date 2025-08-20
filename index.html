@@ -18,7 +18,7 @@
     }
 
     #gameCanvas {
-      border: 6px solid #333;
+      border: 6px solid #222;
       background: linear-gradient(to bottom, #2b2b2b 0%, #1c1c1c 100%);
       box-shadow: 0px 0px 40px rgba(0, 255, 128, 0.6),
                   inset 0 0 30px rgba(0, 0, 0, 0.8);
@@ -183,10 +183,18 @@
       if (e.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += 20;
     });
 
-    spawnEnemy();
-    spawnFuel();
-    update();
+    // 🔹 Esperamos a que las imágenes carguen antes de arrancar el juego
+    let imagesLoaded = 0;
+    [carSprite, enemySprite, fuelSprite].forEach(img => {
+      img.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === 3) {
+          spawnEnemy();
+          spawnFuel();
+          update();
+        }
+      };
+    });
   </script>
 </body>
 </html>
-
