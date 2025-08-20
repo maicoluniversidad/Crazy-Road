@@ -2,51 +2,62 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top-Down Car Racer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🏎️ Car Racer Mobile</title>
   <style>
     body {
       margin: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       background: #111827;
       color: white;
       font-family: Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
     }
     h1 {
-      margin: 10px 0;
+      margin: 5px 0;
+      font-size: 20px;
+      text-align: center;
     }
     #hud {
       display: flex;
-      gap: 15px;
-      margin-bottom: 10px;
+      gap: 10px;
+      margin: 5px;
+      font-size: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     #hud div {
       background: #1f2937;
-      padding: 6px 12px;
-      border-radius: 12px;
+      padding: 4px 8px;
+      border-radius: 8px;
     }
     canvas {
       background: #2d3748;
-      border: 4px solid #111;
+      border: 3px solid #111;
       border-radius: 10px;
+      touch-action: none;
     }
     /* Controles móviles */
     #mobileControls {
-      margin-top: 15px;
+      margin-top: 10px;
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
+      justify-content: center;
     }
     #mobileControls button {
-      padding: 15px;
-      font-size: 18px;
+      padding: 20px;
+      font-size: 22px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       background: #374151;
       color: white;
       font-weight: bold;
+      width: 70px;
+      height: 70px;
     }
     #mobileControls button:active {
       background: #4b5563;
@@ -54,9 +65,7 @@
   </style>
 </head>
 <body>
-  <h1>🏁 Top-Down Car Racer</h1>
-  <p>HTML + CSS + JavaScript | Flechas o WASD | Móvil: botones</p>
-  
+  <h1>🏎️ Car Racer Mobile</h1>
   <div id="hud">
     <div id="speed">Velocidad: 0 km/h</div>
     <div id="distance">Distancia: 0 m</div>
@@ -64,7 +73,7 @@
     <div id="best">Mejor: 0</div>
   </div>
   
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
   <div id="mobileControls">
     <button id="left">⬅️</button>
@@ -76,43 +85,46 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const W = canvas.width;
-    const H = canvas.height;
+
+    // Ajustar canvas al ancho de la pantalla
+    function resizeCanvas(){
+      canvas.width = window.innerWidth * 0.9;
+      canvas.height = window.innerHeight * 0.6;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const W = () => canvas.width;
+    const H = () => canvas.height;
 
     // Jugador
     const player = {
       w: 44, h: 78,
-      x: W/2 - 22, y: H*0.72,
-      angle: 0, speed: 0
+      x: 0, y: 0,
+      speed: 0
     };
 
     // Variables
-    let lanes = [W/4 - 22, W/2 - 22, (3*W/4) - 22];
     let traffic = [];
     let roadOffset = 0;
     let keys = {};
     let distance = 0, score = 0, best = 0;
     let gameOver = false;
 
-    // Colores llamativos para enemigos
+    // Colores de autos enemigos
     const colors = ["#7c3aed","#f59e0b","#10b981","#3b82f6","#e11d48","#22d3ee"];
 
-    // Dibujar un carro
     function drawCar(c, isPlayer=false){
       ctx.save();
       ctx.translate(c.x + c.w/2, c.y + c.h/2);
-      if (isPlayer) ctx.rotate(c.angle * Math.PI/180);
       ctx.translate(-c.w/2, -c.h/2);
 
-      // Color base
       ctx.fillStyle = isPlayer ? "#ff0000" : c.color;
       ctx.fillRect(0, 0, c.w, c.h);
 
-      // Ventanas
       ctx.fillStyle = "white";
       ctx.fillRect(6, 18, c.w-12, c.h-36);
 
-      // Luces
       ctx.fillStyle = "#f87171";
       ctx.fillRect(6, c.h-10, 8, 6);
       ctx.fillRect(c.w-14, c.h-10, 8, 6);
@@ -120,9 +132,8 @@
       ctx.restore();
     }
 
-    // Crear carro enemigo
     function newEnemy(){
-      let lane = lanes[Math.floor(Math.random()*lanes.length)];
+      let lane = Math.random() * (W()-60);
       traffic.push({
         w: 44, h: 78,
         x: lane, y: -100,
@@ -130,10 +141,9 @@
       });
     }
 
-    // Reset juego
     function resetGame(){
-      player.x = W/2 - 22;
-      player.y = H*0.72;
+      player.x = W()/2 - player.w/2;
+      player.y = H()*0.7;
       player.speed = 0;
       traffic = [];
       distance = 0;
@@ -141,66 +151,58 @@
       gameOver = false;
     }
 
-    // Loop principal
     function loop(){
-      ctx.clearRect(0,0,W,H);
+      ctx.clearRect(0,0,W(),H());
 
-      // Fondo (carretera)
+      // Carretera
       ctx.fillStyle = "#1f2937";
-      ctx.fillRect(60,0,W-120,H);
+      ctx.fillRect(40,0,W()-80,H());
 
-      // Líneas
       ctx.strokeStyle = "white";
       ctx.lineWidth = 4;
       ctx.setLineDash([20,20]);
       roadOffset += player.speed*0.3;
       ctx.lineDashOffset = roadOffset;
       ctx.beginPath();
-      ctx.moveTo(W/2,0);
-      ctx.lineTo(W/2,H);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(W/4,0);
-      ctx.lineTo(W/4,H);
-      ctx.moveTo(3*W/4,0);
-      ctx.lineTo(3*W/4,H);
+      ctx.moveTo(W()/2,0);
+      ctx.lineTo(W()/2,H());
       ctx.stroke();
 
-      // Actualizar jugador
-     if (keys["ArrowUp"] || keys["w"]) player.y -= 5;
-    if (keys["ArrowDown"] || keys["s"]) player.y += 5;
-    if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
-    if (keys["ArrowRight"] || keys["d"]) player.x += 5;
+      if (!gameOver){
+        if (keys["ArrowUp"]) player.y -= 5;
+        if (keys["ArrowDown"]) player.y += 5;
+        if (keys["ArrowLeft"]) player.x -= 5;
+        if (keys["ArrowRight"]) player.x += 5;
 
         // Bordes
-        if (player.x < 60) player.x = 60;
-        if (player.x+player.w > W-60) player.x = W-60-player.w;
+        if (player.x < 40) player.x = 40;
+        if (player.x+player.w > W()-40) player.x = W()-40-player.w;
+        if (player.y < 0) player.y = 0;
+        if (player.y+player.h > H()) player.y = H()-player.h;
 
-        distance += player.speed*0.5;
+        distance += 0.5;
         score = Math.floor(distance/10);
       }
 
-      // Enemigos
       if (Math.random() < 0.02) newEnemy();
       for (let i=traffic.length-1;i>=0;i--){
         let c = traffic[i];
-        c.y += 5;
+        c.y += 4;
         drawCar(c);
-        if (c.y > H+100) traffic.splice(i,1);
+        if (c.y > H()+100) traffic.splice(i,1);
 
-        // Colisión
         if (!gameOver &&
-          if (player.x < 60) player.x = 60;
-if (player.x + player.w > W - 60) player.x = W - 60 - player.w;
-if (player.y < 0) player.y = 0;
-if (player.y + player.h > H) player.y = H - player.h;
+          player.x < c.x+c.w &&
+          player.x+player.w > c.x &&
+          player.y < c.y+c.h &&
+          player.y+player.h > c.y){
+          gameOver = true;
+          best = Math.max(best,score);
         }
       }
 
-      // Dibujar jugador
       drawCar(player,true);
 
-      // HUD
       document.getElementById("speed").textContent = "Velocidad: "+Math.round(player.speed*10)+" km/h";
       document.getElementById("distance").textContent = "Distancia: "+Math.floor(distance)+" m";
       document.getElementById("score").textContent = "Puntaje: "+score;
@@ -208,35 +210,33 @@ if (player.y + player.h > H) player.y = H - player.h;
 
       if (gameOver){
         ctx.fillStyle="white";
-        ctx.font="30px Arial";
-        ctx.fillText("GAME OVER",W/2-90,H/2);
-        ctx.font="20px Arial";
-        ctx.fillText("Presiona R para reiniciar",W/2-60,H/2+20);
+        ctx.font="24px Arial";
+        ctx.fillText("GAME OVER",W()/2-70,H()/2);
+        ctx.font="16px Arial";
+        ctx.fillText("Presiona R para reiniciar",W()/2-80,H()/2+20);
       }
 
       requestAnimationFrame(loop);
     }
 
-    // Eventos teclado
     document.addEventListener("keydown",e=>{
       keys[e.key]=true;
       if (gameOver && e.key.toLowerCase()=="r") resetGame();
     });
     document.addEventListener("keyup",e=>keys[e.key]=false);
 
-    // Controles móviles
     function hold(btn,key){
-      btn.addEventListener("touchstart",()=>keys[key]=true);
-      btn.addEventListener("touchend",()=>keys[key]=false);
+      btn.addEventListener("touchstart",(e)=>{e.preventDefault();keys[key]=true;});
+      btn.addEventListener("touchend",(e)=>{e.preventDefault();keys[key]=false;});
     }
     hold(document.getElementById("left"),"ArrowLeft");
     hold(document.getElementById("right"),"ArrowRight");
     hold(document.getElementById("up"),"ArrowUp");
     hold(document.getElementById("down"),"ArrowDown");
 
-    // Iniciar
     resetGame();
     loop();
   </script>
 </body>
 </html>
+
