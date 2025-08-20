@@ -186,7 +186,7 @@
       if (Math.random() < 0.02) newEnemy();
       for (let i=traffic.length-1;i>=0;i--){
         let c = traffic[i];
-        c.y += player.speed - 4;
+        c.y += 5;
         drawCar(c);
         if (c.y > H+100) traffic.splice(i,1);
 
