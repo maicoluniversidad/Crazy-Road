@@ -1,258 +1,146 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fuel Rush ⛽🔥</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #222;
-      font-family: 'Trebuchet MS', sans-serif;
-    }
-
-    #game {
-      width: 400px;
-      height: 600px;
-      margin: 20px auto;
-      border: 5px solid #111;
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(to bottom, #2d2d2d 0%, #444 100%);
-    }
-
-    /* Carretera y césped */
-    #game::before, #game::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      width: 50px;
-      height: 100%;
-      background: #2e7d32;
-      z-index: 0;
-    }
-    #game::before { left: 0; }
-    #game::after { right: 0; }
-
-    /* Líneas amarillas */
-    .road-line {
-      width: 8px;
-      height: 80px;
-      background: yellow;
-      position: absolute;
-      left: 196px;
-      animation: moveLine 1s linear infinite;
-    }
-
-    @keyframes moveLine {
-      from { top: -80px; }
-      to { top: 600px; }
-    }
-
-    /* Jugador */
-    #player {
-      width: 40px;
-      height: 80px;
-      position: absolute;
-      bottom: 20px;
-      left: 180px;
-      border-radius: 5px;
-      background: linear-gradient(to bottom, #ff3d3d, #a30000);
-      box-shadow: 0px 5px 10px rgba(0,0,0,0.5);
-    }
-
-    /* Autos enemigos */
-    .enemy {
-      width: 40px;
-      height: 80px;
-      position: absolute;
-      top: -100px;
-      border-radius: 5px;
-      background: linear-gradient(to bottom, #00c6ff, #004080);
-      box-shadow: 0px 5px 10px rgba(0,0,0,0.6);
-    }
-
-    /* Bonus gasolina */
-    .fuel {
-      width: 30px;
-      height: 40px;
-      background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
-      position: absolute;
-      top: -50px;
-      border-radius: 5px;
-      box-shadow: 0px 5px 8px rgba(255,255,0,0.7);
-    }
-    .fuel::after {
-      content: "⛽";
-      font-size: 20px;
-      position: absolute;
-      top: 5px;
-      left: 5px;
-    }
-
-    /* Marcador */
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 20px;
-      text-shadow: 1px 1px 3px black;
-      z-index: 10;
-    }
-
-    /* Pantalla Game Over */
-    #gameOver {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 26px;
-      color: #ff5252;
-      text-align: center;
-      display: none;
-      text-shadow: 2px 2px 5px black;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuel Rush ⛽ (Pixel Edition)</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    font-family: monospace;
+    color: white;
+    text-align: center;
+  }
+  #game {
+    margin: 20px auto;
+    display: block;
+    background: #222;
+    border: 4px solid #555;
+  }
+  #score {
+    font-size: 20px;
+    margin-top: 10px;
+  }
+</style>
 </head>
 <body>
-  <div id="game">
-    <div id="score">Puntos: 0</div>
-    <div id="player"></div>
-    <div id="gameOver">💥 Game Over<br>¡pero tu coche sigue cool 😎!</div>
-  </div>
+<h1>Fuel Rush ⛽ Pixel Edition</h1>
+<canvas id="game" width="300" height="500"></canvas>
+<div id="score">Puntos: 0</div>
 
-  <script>
-    const game = document.getElementById("game");
-    const player = document.getElementById("player");
-    const scoreDisplay = document.getElementById("score");
-    const gameOverText = document.getElementById("gameOver");
-    let score = 0;
-    let gameOver = false;
-    let speed = 4;
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    // Líneas de carretera
-    for (let i = 0; i < 6; i++) {
-      let line = document.createElement("div");
-      line.classList.add("road-line");
-      line.style.top = (i * 100) + "px";
-      game.appendChild(line);
-    }
+let playerX = 130, playerY = 400;
+let enemies = [];
+let fuels = [];
+let score = 0;
+let gameOver = false;
 
-    // Movimiento del jugador
-    document.addEventListener("keydown", (e) => {
-      if (gameOver) return;
-      let left = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
-      if (e.key === "ArrowLeft" && left > 60) {
-        player.style.left = left - 40 + "px";
-      }
-      if (e.key === "ArrowRight" && left < 300) {
-        player.style.left = left + 40 + "px";
-      }
-    });
+// --- Sprites en Base64 (Pixel art pequeños) ---
+const imgPlayer = new Image();
+imgPlayer.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAA8CAYAAACm7V0NAAAAvElEQVR4nO3UwQkCQRBA0XXtoP//5qNgA5EZo6rMnlN9c7l3gZj0rA5FsQYAAAAAAAAAAAAAAAAA8P+B9Ytke2XmOK9tZ5gFsqHXvSeWv3btjl+Zm3u9Z4D4UzYbjKXgZrFYJtDXaOtFu3mNDXIMXnrvZrDdxl35BeYX+dz8mTfpuSxDlxiN/AUlXy+N1DzwTmNYVtiCKsOLbWh/WELeAp/rLg96DHtJ6wBhzbd18XxAfsHvSztMAV2DjgL5H9PMfXAYAAAAAAAAAAAAAAIA+fwHQoiuymzuHugAAAABJRU5ErkJggg==";
 
-    // Crear enemigos
-    function createEnemy() {
-      let enemy = document.createElement("div");
-      enemy.classList.add("enemy");
-      enemy.style.left = 60 + (Math.floor(Math.random() * 7) * 40) + "px";
-      enemy.style.background = getRandomGradient();
-      game.appendChild(enemy);
+const imgEnemy = new Image();
+imgEnemy.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAA8CAYAAACm7V0NAAAAtklEQVR4nO3UwQmAMBRF0XtJBL9HezYQkKChPsa0X+wnI3cfJjLajGgAAAAAAAAAAAAAAAH/gm5UwnyXtdvTuBGZcSyB7VX0F9BdFfZ7FjPM8Rr9gz/YNvAfNbnPskre2Pa+ufHOn3oWQNl8iNvFmQh6T1C4jC9Nn6bUV7h87G7M15d4A9wN9rOnm0HgL4L2C9tf0b8G+SAsTOcIiz5gPpyoqkZJgAAAAAAAAAAAAAAAHwOYCVWh97OCThMAAAAAElFTkSuQmCC";
 
-      let move = setInterval(() => {
-        if (gameOver) {
-          enemy.remove();
-          clearInterval(move);
-          return;
-        }
-        let top = parseInt(window.getComputedStyle(enemy).getPropertyValue("top"));
-        if (top > 600) {
-          enemy.remove();
-          clearInterval(move);
-          score++;
-          scoreDisplay.innerText = "Puntos: " + score;
-        } else {
-          enemy.style.top = top + speed + "px";
-        }
+const imgFuel = new Image();
+imgFuel.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAgCAYAAAAcQ5s8AAAAqUlEQVR4nO2TwQmAMAxD5a+Hg7mCB5RWRQZx0+3+1s4bSPlIP0IiDgAAAAAAAAAAAP4zQHQ8GksRz3IbLXmuDJqGHyGe68PaB7lj5ivhKjQOaDnpX7CF0dB6tjx7f9w8VgN9qPEaXAKrG6Rt9ahO4jtzKQ8aVu9CF6MHF5POs8AMWxYB/odsmSeQtNn2no4Bb/qj2TMezruQAAAAASUVORK5CYII=";
 
-        // Colisión
-        checkCollision(player, enemy, () => {
-          endGame();
-          clearInterval(move);
-        });
-      }, 30);
-    }
+// --- Fondo carretera ---
+function drawRoad() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Crear gasolina (bonus)
-    function createFuel() {
-      let fuel = document.createElement("div");
-      fuel.classList.add("fuel");
-      fuel.style.left = 60 + (Math.floor(Math.random() * 7) * 40) + "px";
-      game.appendChild(fuel);
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 4;
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(150, y);
+    ctx.lineTo(150, y + 20);
+    ctx.stroke();
+  }
+}
 
-      let move = setInterval(() => {
-        if (gameOver) {
-          fuel.remove();
-          clearInterval(move);
-          return;
-        }
-        let top = parseInt(window.getComputedStyle(fuel).getPropertyValue("top"));
-        if (top > 600) {
-          fuel.remove();
-          clearInterval(move);
-        } else {
-          fuel.style.top = top + speed + "px";
-        }
+// --- Dibujar jugador ---
+function drawPlayer() {
+  ctx.drawImage(imgPlayer, playerX, playerY, 40, 60);
+}
 
-        // Colisión con bonus
-        checkCollision(player, fuel, () => {
-          score += 5;
-          scoreDisplay.innerText = "Puntos: " + score;
-          fuel.remove();
-          clearInterval(move);
-        });
-      }, 30);
-    }
+// --- Dibujar enemigos ---
+function drawEnemies() {
+  enemies.forEach((enemy, i) => {
+    enemy.y += 3;
+    ctx.drawImage(imgEnemy, enemy.x, enemy.y, 40, 60);
+    if (enemy.y > 500) enemies.splice(i, 1);
 
-    // Colores aleatorios con gradientes
-    function getRandomGradient() {
-      let gradients = [
-        "linear-gradient(to bottom, #00c6ff, #004080)",
-        "linear-gradient(to bottom, #4caf50, #1b5e20)",
-        "linear-gradient(to bottom, #ff9800, #e65100)",
-        "linear-gradient(to bottom, #9c27b0, #4a148c)",
-        "linear-gradient(to bottom, #f50057, #880e4f)"
-      ];
-      return gradients[Math.floor(Math.random() * gradients.length)];
-    }
-
-    // Detección de colisiones
-    function checkCollision(a, b, callback) {
-      let aRect = a.getBoundingClientRect();
-      let bRect = b.getBoundingClientRect();
-      if (!(aRect.top > bRect.bottom || 
-            aRect.bottom < bRect.top || 
-            aRect.right < bRect.left || 
-            aRect.left > bRect.right)) {
-        callback();
-      }
-    }
-
-    // Fin del juego
-    function endGame() {
+    // Colisión
+    if (enemy.x < playerX + 40 && enemy.x + 40 > playerX &&
+        enemy.y < playerY + 60 && enemy.y + 60 > playerY) {
       gameOver = true;
-      gameOverText.style.display = "block";
     }
+  });
+}
 
-    // Spawnear enemigos y gasolina
-    setInterval(() => {
-      if (!gameOver) createEnemy();
-    }, 1500);
+// --- Dibujar fuel ---
+function drawFuel() {
+  fuels.forEach((fuel, i) => {
+    fuel.y += 2;
+    ctx.drawImage(imgFuel, fuel.x, fuel.y, 30, 40);
+    if (fuel.y > 500) fuels.splice(i, 1);
 
-    setInterval(() => {
-      if (!gameOver) createFuel();
-    }, 4000);
-  </script>
+    // Colisión
+    if (fuel.x < playerX + 40 && fuel.x + 30 > playerX &&
+        fuel.y < playerY + 60 && fuel.y + 40 > playerY) {
+      score += 5;
+      fuels.splice(i, 1);
+    }
+  });
+}
+
+// --- Control jugador ---
+document.addEventListener("keydown", e => {
+  if (gameOver) return;
+  if (e.key === "ArrowLeft" && playerX > 10) playerX -= 20;
+  if (e.key === "ArrowRight" && playerX < 250) playerX += 20;
+});
+
+// --- Spawns ---
+setInterval(() => {
+  if (!gameOver) enemies.push({x: Math.random() * 250, y: -60});
+}, 1500);
+
+setInterval(() => {
+  if (!gameOver) fuels.push({x: Math.random() * 250, y: -40});
+}, 4000);
+
+// --- Bucle principal ---
+function loop() {
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "20px monospace";
+    ctx.fillText("💥 GAME OVER 💥", 80, 250);
+    return;
+  }
+
+  drawRoad();
+  drawPlayer();
+  drawEnemies();
+  drawFuel();
+
+  score++;
+  document.getElementById("score").innerText = "Puntos: " + score;
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
 </body>
 </html>
+
