@@ -167,12 +167,10 @@
       ctx.stroke();
 
       // Actualizar jugador
-      if (!gameOver){
-        if (keys["ArrowUp"] || keys["w"]) player.speed = Math.min(120, player.speed+0.2);
-        else player.speed = Math.max(0, player.speed-0.1);
-        if (keys["ArrowDown"] || keys["s"]) player.speed = Math.max(130, player.speed-0.5);
-        if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
-        if (keys["ArrowRight"] || keys["d"]) player.x += 5;
+     if (keys["ArrowUp"] || keys["w"]) player.y -= 5;
+    if (keys["ArrowDown"] || keys["s"]) player.y += 5;
+    if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
+    if (keys["ArrowRight"] || keys["d"]) player.x += 5;
 
         // Bordes
         if (player.x < 60) player.x = 60;
@@ -192,12 +190,10 @@
 
         // Colisión
         if (!gameOver &&
-          player.x < c.x+c.w &&
-          player.x+player.w > c.x &&
-          player.y < c.y+c.h &&
-          player.y+player.h > c.y){
-          gameOver = true;
-          best = Math.max(best,score);
+          if (player.x < 60) player.x = 60;
+if (player.x + player.w > W - 60) player.x = W - 60 - player.w;
+if (player.y < 0) player.y = 0;
+if (player.y + player.h > H) player.y = H - player.h;
         }
       }
 
