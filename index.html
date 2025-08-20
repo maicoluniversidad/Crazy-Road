@@ -1,180 +1,192 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fuel Rush ⛽ Arcade Pixel</title>
-<style>
-  body {
-    margin: 0;
-    background: #111;
-    font-family: monospace;
-    color: white;
-    text-align: center;
-  }
-  #game {
-    margin: 20px auto;
-    display: block;
-    background: #333;
-    border: 5px solid #555;
-  }
-  #score {
-    font-size: 20px;
-    margin-top: 10px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Fuel Rush 🚗🔥</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+      font-family: 'Press Start 2P', cursive, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    #gameCanvas {
+      border: 6px solid #333;
+      background: linear-gradient(to bottom, #2b2b2b 0%, #1c1c1c 100%);
+      box-shadow: 0px 0px 40px rgba(0, 255, 128, 0.6),
+                  inset 0 0 30px rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+    }
+
+    #score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 16px;
+      color: #00ffcc;
+      text-shadow: 0 0 6px #00ffcc, 0 0 10px #00ffaa;
+      border: 2px solid #00ffaa;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 20, 20, 0.9);
+      padding: 40px 60px;
+      border-radius: 10px;
+      border: 2px solid #ff0066;
+      text-align: center;
+      font-size: 22px;
+      display: none;
+      color: #fff;
+      text-shadow: 0 0 8px #ff0066;
+      box-shadow: 0px 0px 25px rgba(255, 0, 102, 0.7);
+    }
+
+    #gameOver button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(to right, #ff0066, #ff6600);
+      color: white;
+      cursor: pointer;
+      font-family: 'Press Start 2P', cursive, monospace;
+      text-shadow: 0 0 6px #000;
+      transition: transform 0.2s ease;
+    }
+
+    #gameOver button:hover {
+      transform: scale(1.1);
+    }
+  </style>
 </head>
 <body>
-<h1>Fuel Rush ⛽ Arcade Pixel</h1>
-<canvas id="game" width="320" height="500"></canvas>
-<div id="score">Puntos: 0</div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div id="score">Puntos: 0</div>
+  <div id="gameOver">
+    <p>🚧 GAME OVER 🚧</p>
+    <button onclick="location.reload()">Reintentar</button>
+  </div>
 
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const gameOverScreen = document.getElementById("gameOver");
 
-let playerX = 140, playerY = 400;
-let enemies = [];
-let fuels = [];
-let score = 0;
-let gameOver = false;
-let roadOffset = 0;
+    let score = 0;
+    let gameOver = false;
 
-// --- Sprites ---
-const imgPlayer = new Image();
-imgPlayer.src =
-"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAwCAYAAAAG7+R8AAAAvklEQVR4nO3ZwQmDQBRA0aMf6dV09v1d7wWwRGYckdcz98hs2Yd9gNnmrjshAAAAAAAAAADAf4HPFQCNHJP8Cz2eEX/MOAKZ7te2z9vfZK5Z2Y5Ym2X4M4zxOnltpyQYyFoFPjPbIb2cS1vAcpVJgvcin9nMnZbWdaCJ9wUPlzVVkwm+xHPqF4U1Xcd2GH6SsyfINt3hxahMDrT5/11jpjExExsP+AfsKNoDXT1j0V4w0kAwAAAAAElFTkSuQmCC";
+    // Sprites en Base64
+    const carSprite = new Image();
+    carSprite.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAoCAYAAAD6f5qPAAAAwklEQVR4nO3YMQ6CMBBF0dsgXcCDxAhoZvhIkqjMAlLaPsuLOFfSsm2k9YQTBjzgr87HgVwAAAAAAAAAAwHsgAe3Sjvq9qWJOHtbE3LEc0f1ZmioIxbCHrYyZBxCjceELaztwZQOsG6Jpg4hNcsW4B3PEmKcm28hBEn13pAJxFV0+wJIkSPsuhHogNoUP5IbKfR6IHfsfeT3tCv9n6pQwMeyjQ+aqeb7DBRXy9b3U8hvw3tZz9acHgAC8aaET/5P7ryxAAAAAElFTkSuQmCC";
 
-const imgEnemy = new Image();
-imgEnemy.src =
-"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAwCAYAAAAG7+R8AAAAuklEQVR4nO3YMQqDQBBF0Wtg+5hN9sliwBgQthbPS05ZeYaWFXbfqO0fQjzwr00QAAAAAAAAAAAADgA94vAIcoyTfr4iuVnM7S3EDsIcE1pT8PoM6teZW4In2MP+fL7iBmjvhfx+UhsqsI2e5T84FuP2zvdUSwNYzQTv4JqUnkMW9w0N6wZvYdOexZ9CxnL2yLPB2wn8CDgAAAABJRU5ErkJggg==";
+    const enemySprite = new Image();
+    enemySprite.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAoCAYAAAD6f5qPAAAAp0lEQVR4nO3WMQ6CMBRE0dsgZcgD2aTqKJI4V9KrgAUUVTRD5Y9rYymfpY+LBgwA1P4PjvKFAAAAAAAAAACA5xsBS2hHXeHeJlmHR1pxzVf5qIqE0kVOGoVgEnqP4m2s3fUh4NaS5UOmRO3jD4GaSPcLd2yCBM4ilKwL0nhtvoLykS2cJ+Qec0ZzsyWwnz4e7EY9MzPf2m1L2z5f/EDfK1dHznb+1pToCEAAAAASUVORK5CYII=";
 
-const imgFuel = new Image();
-imgFuel.src =
-"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAgCAYAAAAcQ5s8AAAAqUlEQVR4nO2TwQmAMAxD5a+Hg7mCB5RWRQZx0+3+1s4bSPlIP0IiDgAAAAAAAAAAAP4zQHQ8GksRz3IbLXmuDJqGHyGe68PaB7lj5ivhKjQOaDnpX7CF0dB6tjx7f9w8VgN9qPEaXAKrG6Rt9ahO4jtzKQ8aVu9CF6MHF5POs8AMWxYB/odsmSeQtNn2no4Bb/qj2TMezruQAAAAASUVORK5CYII=";
+    const fuelSprite = new Image();
+    fuelSprite.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAoCAYAAAD6f5qPAAAAhklEQVR4nO3VQQqAIBBF0aFUhffkEmXklg2XAM0S3a1XJIVlS2s3g3Z+AB7NAAAAAAAAAAD4FwgAaY+It1giUMF+4yoIVLxvTZwAzzOC+EjqvKXRB6wrxJkg4MbZDWhiCBlgUyLRMyyCwi1xmyLuh1mZ68e4X5XweF8bQWrf01mVKrscBgt4QQ/mcEnwXacgH/gAAAAASUVORK5CYII=";
 
-// --- Sonidos (Base64, formato WAV simple) ---
-const sndMove = new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAADYAAAD///8AAP///wD///8A////AP///wD///8A////AP///w==");
-const sndCrash = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA=");
-const sndFuel = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAA///////////8AAAAAAAD///8AAAAAAAD///8=");
-const sndMusic = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAAAgICAgP///wAAAP8AAAAAAP///w==");
-sndMusic.loop = true;
-sndMusic.volume = 0.2;
+    // Jugador
+    const player = { x: 175, y: 500, width: 40, height: 60 };
 
-// --- Fondo carretera ---
-function drawRoad() {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    let enemies = [];
+    let fuels = [];
 
-  ctx.fillStyle = "green"; // césped
-  ctx.fillRect(0, 0, 30, canvas.height);
-  ctx.fillRect(canvas.width - 30, 0, 30, canvas.height);
-
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 4;
-  roadOffset += 5;
-  if (roadOffset > 40) roadOffset = 0;
-
-  for (let y = -40; y < canvas.height; y += 40) {
-    ctx.beginPath();
-    ctx.moveTo(canvas.width / 2, y + roadOffset);
-    ctx.lineTo(canvas.width / 2, y + 20 + roadOffset);
-    ctx.stroke();
-  }
-}
-
-// --- Dibujar jugador ---
-function drawPlayer() {
-  ctx.shadowColor = "yellow";
-  ctx.shadowBlur = 20;
-  ctx.drawImage(imgPlayer, playerX, playerY, 40, 60);
-  ctx.shadowBlur = 0;
-}
-
-// --- Dibujar enemigos ---
-function drawEnemies() {
-  enemies.forEach((enemy, i) => {
-    enemy.y += 4;
-    ctx.drawImage(imgEnemy, enemy.x, enemy.y, 40, 60);
-    if (enemy.y > 500) enemies.splice(i, 1);
-
-    // Colisión
-    if (enemy.x < playerX + 40 && enemy.x + 40 > playerX &&
-        enemy.y < playerY + 60 && enemy.y + 60 > playerY) {
-      sndCrash.play();
-      flashScreen();
-      gameOver = true;
+    function drawPlayer() {
+      ctx.drawImage(carSprite, player.x, player.y, player.width, player.height);
     }
-  });
-}
 
-// --- Dibujar fuel ---
-function drawFuel() {
-  fuels.forEach((fuel, i) => {
-    fuel.y += 3;
-    ctx.drawImage(imgFuel, fuel.x, fuel.y, 30, 40);
-    if (fuel.y > 500) fuels.splice(i, 1);
-
-    // Colisión
-    if (fuel.x < playerX + 40 && fuel.x + 30 > playerX &&
-        fuel.y < playerY + 60 && fuel.y + 40 > playerY) {
-      score += 10;
-      sndFuel.play();
-      fuels.splice(i, 1);
+    function drawEnemies() {
+      enemies.forEach(e => ctx.drawImage(enemySprite, e.x, e.y, e.width, e.height));
     }
-  });
-}
 
-// --- Control jugador ---
-document.addEventListener("keydown", e => {
-  if (gameOver) return;
-  if (e.key === "ArrowLeft" && playerX > 40) { playerX -= 20; sndMove.play(); }
-  if (e.key === "ArrowRight" && playerX < 240) { playerX += 20; sndMove.play(); }
-});
+    function drawFuels() {
+      fuels.forEach(f => ctx.drawImage(fuelSprite, f.x, f.y, f.width, f.height));
+    }
 
-// --- Efecto de choque ---
-function flashScreen() {
-  canvas.style.borderColor = "red";
-  setTimeout(() => canvas.style.borderColor = "#555", 300);
-}
+    function update() {
+      if (gameOver) return;
 
-// --- Spawns ---
-setInterval(() => {
-  if (!gameOver) enemies.push({x: 40 + Math.random() * 220, y: -60});
-}, 1200);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-setInterval(() => {
-  if (!gameOver) fuels.push({x: 40 + Math.random() * 220, y: -40});
-}, 4000);
+      // Mover enemigos
+      enemies.forEach(e => e.y += 4);
+      enemies = enemies.filter(e => e.y < canvas.height);
 
-// --- Bucle principal ---
-function loop() {
-  if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "24px monospace";
-    ctx.fillText("💥 GAME OVER 💥", 70, 250);
-    sndMusic.pause();
-    return;
-  }
+      // Mover fuels
+      fuels.forEach(f => f.y += 3);
+      fuels = fuels.filter(f => f.y < canvas.height);
 
-  drawRoad();
-  drawPlayer();
-  drawEnemies();
-  drawFuel();
+      // Dibujar todo
+      drawPlayer();
+      drawEnemies();
+      drawFuels();
 
-  score++;
-  document.getElementById("score").innerText = "Puntos: " + score;
+      // Colisiones
+      enemies.forEach(e => {
+        if (player.x < e.x + e.width &&
+            player.x + player.width > e.x &&
+            player.y < e.y + e.height &&
+            player.y + player.height > e.y) {
+          gameOver = true;
+          gameOverScreen.style.display = "block";
+        }
+      });
 
-  requestAnimationFrame(loop);
-}
+      fuels.forEach((f, i) => {
+        if (player.x < f.x + f.width &&
+            player.x + player.width > f.x &&
+            player.y < f.y + f.height &&
+            player.y + player.height > f.y) {
+          fuels.splice(i, 1);
+          score += 10;
+          scoreDisplay.textContent = "Puntos: " + score;
+        }
+      });
 
-// Iniciar música al primer clic
-document.body.addEventListener("click", () => {
-  if (!gameOver) sndMusic.play();
-});
+      requestAnimationFrame(update);
+    }
 
-loop();
-</script>
+    function spawnEnemy() {
+      if (!gameOver) {
+        const x = Math.random() * (canvas.width - 40);
+        enemies.push({ x, y: -60, width: 40, height: 60 });
+        setTimeout(spawnEnemy, 1500);
+      }
+    }
+
+    function spawnFuel() {
+      if (!gameOver) {
+        const x = Math.random() * (canvas.width - 30);
+        fuels.push({ x, y: -40, width: 30, height: 40 });
+        setTimeout(spawnFuel, 4000);
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && player.x > 0) player.x -= 20;
+      if (e.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += 20;
+    });
+
+    spawnEnemy();
+    spawnFuel();
+    update();
+  </script>
 </body>
 </html>
 
