@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>🏎️ Car Racer Mobile</title>
+  <title>🏁 Top-Down Car Racer</title>
   <style>
     body {
       margin: 0;
@@ -17,35 +17,40 @@
       overflow: hidden;
     }
     h1 {
-      margin: 5px 0;
-      font-size: 20px;
+      margin: 10px 0 5px 0;
+      font-size: 28px;
       text-align: center;
+    }
+    p {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #d1d5db;
     }
     #hud {
       display: flex;
-      gap: 10px;
-      margin: 5px;
-      font-size: 14px;
+      gap: 15px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
       justify-content: center;
     }
     #hud div {
       background: #1f2937;
-      padding: 4px 8px;
-      border-radius: 8px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 14px;
     }
     canvas {
       background: #2d3748;
-      border: 3px solid #111;
-      border-radius: 10px;
+      border: 4px solid #111;
+      border-radius: 12px;
       touch-action: none;
     }
     /* Controles móviles */
     #mobileControls {
-      margin-top: 10px;
+      margin-top: 15px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       justify-content: center;
     }
     #mobileControls button {
@@ -65,7 +70,9 @@
   </style>
 </head>
 <body>
-  <h1>🏎️ Car Racer Mobile</h1>
+  <h1>🏁 Top-Down Car Racer</h1>
+  <p>Usa Flechas o WASD | En móvil: botones</p>
+
   <div id="hud">
     <div id="speed">Velocidad: 0 km/h</div>
     <div id="distance">Distancia: 0 m</div>
@@ -86,10 +93,10 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Ajustar canvas al ancho de la pantalla
+    // Ajustar canvas al tamaño de la pantalla
     function resizeCanvas(){
-      canvas.width = window.innerWidth * 0.9;
-      canvas.height = window.innerHeight * 0.6;
+      canvas.width = Math.min(window.innerWidth * 0.9, 400);
+      canvas.height = Math.min(window.innerHeight * 0.65, 600);
     }
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
@@ -156,12 +163,12 @@
 
       // Carretera
       ctx.fillStyle = "#1f2937";
-      ctx.fillRect(40,0,W()-80,H());
+      ctx.fillRect(60,0,W()-120,H());
 
       ctx.strokeStyle = "white";
       ctx.lineWidth = 4;
       ctx.setLineDash([20,20]);
-      roadOffset += player.speed*0.3;
+      roadOffset += 3;
       ctx.lineDashOffset = roadOffset;
       ctx.beginPath();
       ctx.moveTo(W()/2,0);
@@ -169,14 +176,14 @@
       ctx.stroke();
 
       if (!gameOver){
-        if (keys["ArrowUp"]) player.y -= 5;
-        if (keys["ArrowDown"]) player.y += 5;
-        if (keys["ArrowLeft"]) player.x -= 5;
-        if (keys["ArrowRight"]) player.x += 5;
+        if (keys["ArrowUp"] || keys["w"]) player.y -= 5;
+        if (keys["ArrowDown"] || keys["s"]) player.y += 5;
+        if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
+        if (keys["ArrowRight"] || keys["d"]) player.x += 5;
 
         // Bordes
-        if (player.x < 40) player.x = 40;
-        if (player.x+player.w > W()-40) player.x = W()-40-player.w;
+        if (player.x < 60) player.x = 60;
+        if (player.x+player.w > W()-60) player.x = W()-60-player.w;
         if (player.y < 0) player.y = 0;
         if (player.y+player.h > H()) player.y = H()-player.h;
 
