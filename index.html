@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>🏁 CRAZY ROAD</title>
+  <title>🏁 Top-Down Car Racer</title>
   <style>
     body {
       margin: 0;
@@ -101,7 +101,7 @@
 <body>
   <!-- Menú principal -->
   <div id="menu">
-    <h1>🏁 CRAZY ROAD</h1>
+    <h1>🏁 Top-Down Car Racer</h1>
     <button id="playBtn">Jugar</button>
     <button id="howBtn">Instrucciones</button>
     <button id="creditsBtn">Créditos</button>
@@ -109,6 +109,7 @@
 
   <!-- HUD -->
   <div id="hud">
+    <div id="speed">Velocidad: 0 km/h</div>
     <div id="distance">Distancia: 0 m</div>
     <div id="score">Puntaje: 0</div>
     <div id="best">Mejor: 0</div>
@@ -234,7 +235,7 @@
         ctx.font="24px Arial";
         ctx.fillText("GAME OVER",W()/2-70,H()/2);
         ctx.font="16px Arial";
-        ctx.fillText("Refresca la pagina para reiniciar",W()/2-80,H()/2+20);
+        ctx.fillText("Presiona R para reiniciar",W()/2-80,H()/2+20);
       }
       requestAnimationFrame(loop);
     }
@@ -266,10 +267,10 @@
       loop();
     });
     document.getElementById("howBtn").addEventListener("click",()=>{
-      alert("Controles:\n-  Móvil: botones en pantalla\nEvita chocar con otros autos y llega lo más lejos posible.");
+      alert("Controles:\n- PC: Flechas o WASD\n- Móvil: botones en pantalla\nEvita chocar con otros autos y llega lo más lejos posible.");
     });
     document.getElementById("creditsBtn").addEventListener("click",()=>{
-      alert("Juego creado por:Maicol Lancheros , Samuel Saavedra y Kevin Gonzalez \nCon HTML, CSS y JavaScript.");
+      alert("Juego creado por: Tú 🚀\nCon HTML, CSS y JavaScript.");
     });
   </script>
 </body>
