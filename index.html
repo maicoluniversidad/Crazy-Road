@@ -168,7 +168,7 @@
 
       // Actualizar jugador
       if (!gameOver){
-        if (keys["ArrowUp"] || keys["w"]) player.speed = Math.min(1, player.speed+0.1);
+        if (keys["ArrowUp"] || keys["w"]) player.speed = Math.min(12, player.speed+0.2);
         else player.speed = Math.max(0, player.speed-0.1);
         if (keys["ArrowDown"] || keys["s"]) player.speed = Math.max(0, player.speed-0.5);
         if (keys["ArrowLeft"] || keys["a"]) player.x -= 5;
