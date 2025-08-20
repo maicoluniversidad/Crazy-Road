@@ -3,31 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Road Fighter Original 🚗🔥</title>
+  <title>Fuel Rush ⛽🔥</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #333;
-      font-family: Arial, sans-serif;
+      background: #222;
+      font-family: 'Trebuchet MS', sans-serif;
     }
 
     #game {
       width: 400px;
       height: 600px;
-      background: #555;
       margin: 20px auto;
       border: 5px solid #111;
       position: relative;
       overflow: hidden;
+      background: linear-gradient(to bottom, #2d2d2d 0%, #444 100%);
     }
 
-    .road-line {
-      width: 10px;
-      height: 80px;
-      background: white;
+    /* Carretera y césped */
+    #game::before, #game::after {
+      content: "";
       position: absolute;
-      left: 195px;
+      top: 0;
+      width: 50px;
+      height: 100%;
+      background: #2e7d32;
+      z-index: 0;
+    }
+    #game::before { left: 0; }
+    #game::after { right: 0; }
+
+    /* Líneas amarillas */
+    .road-line {
+      width: 8px;
+      height: 80px;
+      background: yellow;
+      position: absolute;
+      left: 196px;
       animation: moveLine 1s linear infinite;
     }
 
@@ -36,51 +50,69 @@
       to { top: 600px; }
     }
 
+    /* Jugador */
     #player {
       width: 40px;
       height: 80px;
-      background: red;
       position: absolute;
       bottom: 20px;
       left: 180px;
       border-radius: 5px;
+      background: linear-gradient(to bottom, #ff3d3d, #a30000);
+      box-shadow: 0px 5px 10px rgba(0,0,0,0.5);
     }
 
+    /* Autos enemigos */
     .enemy {
       width: 40px;
       height: 80px;
-      background: blue;
       position: absolute;
       top: -100px;
       border-radius: 5px;
+      background: linear-gradient(to bottom, #00c6ff, #004080);
+      box-shadow: 0px 5px 10px rgba(0,0,0,0.6);
     }
 
+    /* Bonus gasolina */
     .fuel {
       width: 30px;
-      height: 30px;
-      background: yellow;
+      height: 40px;
+      background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
       position: absolute;
       top: -50px;
-      border-radius: 50%;
+      border-radius: 5px;
+      box-shadow: 0px 5px 8px rgba(255,255,0,0.7);
+    }
+    .fuel::after {
+      content: "⛽";
+      font-size: 20px;
+      position: absolute;
+      top: 5px;
+      left: 5px;
     }
 
+    /* Marcador */
     #score {
       position: absolute;
       top: 10px;
       left: 10px;
       color: white;
-      font-size: 18px;
+      font-size: 20px;
+      text-shadow: 1px 1px 3px black;
+      z-index: 10;
     }
 
+    /* Pantalla Game Over */
     #gameOver {
       position: absolute;
       top: 40%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 24px;
-      color: white;
+      font-size: 26px;
+      color: #ff5252;
       text-align: center;
       display: none;
+      text-shadow: 2px 2px 5px black;
     }
   </style>
 </head>
@@ -112,10 +144,10 @@
     document.addEventListener("keydown", (e) => {
       if (gameOver) return;
       let left = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
-      if (e.key === "ArrowLeft" && left > 0) {
+      if (e.key === "ArrowLeft" && left > 60) {
         player.style.left = left - 40 + "px";
       }
-      if (e.key === "ArrowRight" && left < 360) {
+      if (e.key === "ArrowRight" && left < 300) {
         player.style.left = left + 40 + "px";
       }
     });
@@ -124,8 +156,8 @@
     function createEnemy() {
       let enemy = document.createElement("div");
       enemy.classList.add("enemy");
-      enemy.style.left = Math.floor(Math.random() * 10) * 40 + "px";
-      enemy.style.background = getRandomColor();
+      enemy.style.left = 60 + (Math.floor(Math.random() * 7) * 40) + "px";
+      enemy.style.background = getRandomGradient();
       game.appendChild(enemy);
 
       let move = setInterval(() => {
@@ -145,14 +177,10 @@
         }
 
         // Colisión
-        let pLeft = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
-        let pTop = parseInt(window.getComputedStyle(player).getPropertyValue("top"));
-        let eLeft = parseInt(window.getComputedStyle(enemy).getPropertyValue("left"));
-        let eTop = parseInt(window.getComputedStyle(enemy).getPropertyValue("top"));
-        if (Math.abs(pLeft - eLeft) < 40 && eTop + 80 > pTop && eTop < pTop + 80) {
+        checkCollision(player, enemy, () => {
           endGame();
           clearInterval(move);
-        }
+        });
       }, 30);
     }
 
@@ -160,7 +188,7 @@
     function createFuel() {
       let fuel = document.createElement("div");
       fuel.classList.add("fuel");
-      fuel.style.left = Math.floor(Math.random() * 10) * 40 + "px";
+      fuel.style.left = 60 + (Math.floor(Math.random() * 7) * 40) + "px";
       game.appendChild(fuel);
 
       let move = setInterval(() => {
@@ -178,23 +206,37 @@
         }
 
         // Colisión con bonus
-        let pLeft = parseInt(window.getComputedStyle(player).getPropertyValue("left"));
-        let pTop = parseInt(window.getComputedStyle(player).getPropertyValue("top"));
-        let fLeft = parseInt(window.getComputedStyle(fuel).getPropertyValue("left"));
-        let fTop = parseInt(window.getComputedStyle(fuel).getPropertyValue("top"));
-        if (Math.abs(pLeft - fLeft) < 40 && fTop + 30 > pTop && fTop < pTop + 80) {
+        checkCollision(player, fuel, () => {
           score += 5;
           scoreDisplay.innerText = "Puntos: " + score;
           fuel.remove();
           clearInterval(move);
-        }
+        });
       }, 30);
     }
 
-    // Colores aleatorios para enemigos
-    function getRandomColor() {
-      let colors = ["blue", "green", "purple", "orange", "pink"];
-      return colors[Math.floor(Math.random() * colors.length)];
+    // Colores aleatorios con gradientes
+    function getRandomGradient() {
+      let gradients = [
+        "linear-gradient(to bottom, #00c6ff, #004080)",
+        "linear-gradient(to bottom, #4caf50, #1b5e20)",
+        "linear-gradient(to bottom, #ff9800, #e65100)",
+        "linear-gradient(to bottom, #9c27b0, #4a148c)",
+        "linear-gradient(to bottom, #f50057, #880e4f)"
+      ];
+      return gradients[Math.floor(Math.random() * gradients.length)];
+    }
+
+    // Detección de colisiones
+    function checkCollision(a, b, callback) {
+      let aRect = a.getBoundingClientRect();
+      let bRect = b.getBoundingClientRect();
+      if (!(aRect.top > bRect.bottom || 
+            aRect.bottom < bRect.top || 
+            aRect.right < bRect.left || 
+            aRect.left > bRect.right)) {
+        callback();
+      }
     }
 
     // Fin del juego
