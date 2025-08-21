@@ -109,7 +109,6 @@
 
   <!-- HUD -->
   <div id="hud">
-    <div id="speed">Velocidad: 0 km/h</div>
     <div id="distance">Distancia: 0 m</div>
     <div id="score">Puntaje: 0</div>
     <div id="best">Mejor: 0</div>
@@ -224,8 +223,7 @@
         }
       }
 
-      drawCar(player,true);
-      document.getElementById("speed").textContent = "Velocidad: "+Math.round(player.speed*10)+" km/h";
+      drawCar(player,true)
       document.getElementById("distance").textContent = "Distancia: "+Math.floor(distance)+" m";
       document.getElementById("score").textContent = "Puntaje: "+score;
       document.getElementById("best").textContent = "Mejor: "+best;
